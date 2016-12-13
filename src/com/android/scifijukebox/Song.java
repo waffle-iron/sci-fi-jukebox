@@ -1,4 +1,4 @@
-package com.android.player.SciFiJukeBox;
+package com.android.scifijukebox;
 
 public class Song
 {

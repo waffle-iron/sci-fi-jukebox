@@ -1,6 +1,6 @@
-package com.android.player.SciFiJukeBox;
+package com.android.scifijukebox;
 
-import com.android.player.SciFiJukeBox.MusicService.MusicBinder;
+import com.android.scifijukebox.MusicService.MusicBinder;
 
 import android.app.Activity;
 import android.os.Bundle;

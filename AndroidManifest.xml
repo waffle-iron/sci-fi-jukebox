@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.android.player.SciFiJukeBox"
+      package="com.android.scifijukebox"
       android:versionCode="1"
       android:versionName="1.0">
 
@@ -15,8 +15,8 @@
 
     <application
       android:label="@string/app_name"
-      android:icon="@drawable/ic_launcher">
-        <activity android:name="com.android.player.SciFiJukeBox.SciFiJukebox"
+      android:icon="@drawable/scifi_jukebox">
+        <activity android:name="com.android.scifijukebox.SciFiJukebox"
                   android:launchMode="singleTop"
                   android:screenOrientation="portrait"
                   android:label="@string/app_name">
@@ -25,6 +25,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="com.android.player.SciFiJukeBox.MusicService" />
+        <service android:name="com.android.scifijukebox.MusicService" />
     </application>
 </manifest>
