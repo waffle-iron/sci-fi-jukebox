@@ -1,5 +1,7 @@
 package com.android.player.SciFiJukeBox;
 
+import com.android.player.SciFiJukeBox.MusicService.MusicBinder;
+
 import android.app.Activity;
 import android.os.Bundle;
 
@@ -12,12 +14,24 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.widget.ListView;
 
+import android.os.IBinder;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.view.MenuItem;
+import android.view.View;
+
 import android.view.Menu;
 
 public class SciFiJukebox extends Activity
 {
     private ArrayList<Song> songList;
     private ListView songView;
+
+    private MusicService musicSrv;
+    private Intent playIntent;
+    private boolean musicBound=false;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -40,6 +54,27 @@ public class SciFiJukebox extends Activity
       SongAdapter songAdt = new SongAdapter(this, this.songList);
       songView.setAdapter(songAdt);
     }
+
+    //connect to the service
+    private ServiceConnection musicConnection = new ServiceConnection()
+    { 
+      @Override
+      public void onServiceConnected(ComponentName name, IBinder service)
+      {
+        MusicBinder binder = (MusicBinder)service;
+        //get service
+        musicSrv = binder.getService();
+        //pass list
+        musicSrv.setList(songList);
+        musicBound = true;
+      }
+     
+      @Override
+      public void onServiceDisconnected(ComponentName name)
+      {
+        musicBound = false;
+      }
+    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -73,4 +108,48 @@ public class SciFiJukebox extends Activity
         } while(musicCursor.moveToNext());
       }
     }
+
+  @Override
+  protected void onStart()
+  {
+    super.onStart();
+    if(playIntent == null)
+    {
+      playIntent = new Intent(this, MusicService.class);
+      bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+      startService(playIntent);
+    }
+  }
+
+  public void songPicked(View view)
+  {
+    musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
+    musicSrv.playSong();
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item)
+  {
+    //menu item selected
+    switch (item.getItemId())
+    {
+      case R.id.action_shuffle:
+        //shuffle
+        break;
+      case R.id.action_end:
+        stopService(playIntent);
+        musicSrv=null;
+        System.exit(0);
+        break;
+    }
+    return super.onOptionsItemSelected(item);
+  }
+
+  @Override
+  protected void onDestroy()
+  {
+    stopService(playIntent);
+    musicSrv=null;
+    super.onDestroy();
+  }
 }
