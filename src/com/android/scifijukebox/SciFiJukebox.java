@@ -62,8 +62,8 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
         }
       });
 
-    SongAdapter songAdt = new SongAdapter(this, this.songList);
-    songView.setAdapter(songAdt);
+    SongElementAdapter adapter = new SongElementAdapter(this, this.songList);
+    songView.setAdapter(adapter);
     setController();
     Log.i(SCIFI_JUKEBOX, "Activity initialized successfully");
   }
@@ -189,7 +189,8 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
   public void songPicked(View pView)
   {
-    this.musicService.setSong(Integer.parseInt(pView.getTag().toString()));
+    int musicToPlay = ((SongElementWrapper)pView.getTag()).getPosition();
+    this.musicService.setSong(musicToPlay);
     this.musicService.playSong();
     if (this.playbackPaused)
     {

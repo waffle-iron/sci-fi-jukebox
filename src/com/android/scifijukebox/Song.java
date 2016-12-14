@@ -27,4 +27,9 @@ public class Song
   {
     return this.artist;
   }
+
+  public String toString()
+  {
+    return (this.title + " : " + this.artist);
+  }
 }
