@@ -17,71 +17,40 @@ import android.os.PowerManager;
 import android.util.Log;
 
 public class MusicService extends Service
-  implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
-    MediaPlayer.OnCompletionListener
+                          implements MediaPlayer.OnPreparedListener,
+                                     MediaPlayer.OnErrorListener,
+                                     MediaPlayer.OnCompletionListener
 {
-  //media player
   private MediaPlayer player;
-  //song list
-  private ArrayList<Song> songs;
-  //current position
-  private int songPosn;
-  //title of current song
+  private ArrayList<Song> songList;
+  private int songPosition;
   private String songTitle="";
-  //notification id
   private static final int NOTIFY_ID = 1;
 
   private final IBinder musicBind = new MusicBinder();
 
-  private boolean shuffle=false;
+  private boolean shuffle = false;
   private Random rand;
 
+  // Service methods
+  @Override
   public void onCreate()
   {
     super.onCreate();
-    songPosn = 0;
-    rand = new Random();
-    player = new MediaPlayer();
+    this.songPosition = 0;
+    this.rand = new Random();
+    this.player = new MediaPlayer();
     initMusicPlayer();
   }
 
-  public void initMusicPlayer()
+  @Override
+  public void onDestroy()
   {
-    player.setWakeMode(getApplicationContext(),
-                        PowerManager.PARTIAL_WAKE_LOCK);
-    player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-    player.setOnPreparedListener(this);
-    player.setOnCompletionListener(this);
-    player.setOnErrorListener(this);
-  }
-
-  public void setList(ArrayList<Song> theSongs)
-  {
-    songs = theSongs;
-  }
-
-  public class MusicBinder extends Binder
-  {
-    MusicService getService()
-    {
-      return MusicService.this;
-    }
-  }
-
-  public void setShuffle()
-  {
-    if (shuffle)
-    {
-      shuffle = false;
-    }
-    else
-    {
-      shuffle = true;
-    }
+    stopForeground(true);
   }
 
   @Override
-  public IBinder onBind(Intent arg0)
+  public IBinder onBind(Intent binder)
   {
       return musicBind;
   }
@@ -94,98 +63,12 @@ public class MusicService extends Service
     return false;
   }
 
-  public void playSong()
-  {
-    player.reset();
-    //get song
-    Song playSong = songs.get(songPosn);
-    songTitle = playSong.getTitle();
-    //get id
-    long currSong = playSong.getID();
-    //set uri
-    Uri trackUri = ContentUris.withAppendedId(
-      android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-      currSong);
-
-    try
-    {
-      player.setDataSource(getApplicationContext(), trackUri);
-    }
-    catch(Exception e)
-    {
-      Log.e("MUSIC SERVICE", "Error setting data source", e);
-    }
-
-    player.prepareAsync();
-  }
-
-  public int getPosn()
-  {
-    return player.getCurrentPosition();
-  }
-
-  public int getDur()
-  {
-    return player.getDuration();
-  }
-
-  public boolean isPng()
-  {
-    return player.isPlaying();
-  }
-
-  public void pausePlayer()
-  {
-    player.pause();
-  }
-
-  public void seek(int posn)
-  {
-    player.seekTo(posn);
-  }
-
-  public void go()
-  {
-    player.start();
-  }
-
-  public void playPrev()
-  {
-    songPosn--;
-    if (songPosn < 0)
-    {
-      songPosn = songs.size() - 1;
-    }
-    playSong();
-  }
-
-  public void playNext()
-  {
-    if (shuffle)
-    {
-      int newSong = songPosn;
-      while (newSong == songPosn)
-      {
-        newSong = rand.nextInt(songs.size());
-      }
-      songPosn = newSong;
-    }
-    else
-    {
-      songPosn++;
-      if (songPosn >= songs.size())
-      {
-        songPosn = 0;
-      }
-    }
-    playSong();
-  }
-
+  // MediaPlayer interface
   @Override
-  public void onPrepared(MediaPlayer mp)
+  public void onPrepared(MediaPlayer pMediaPlayer)
   {
     //start playback
-    mp.start();
+    pMediaPlayer.start();
     //Notification
     Intent notIntent = new Intent(this, SciFiJukebox.class);
     notIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -203,33 +86,150 @@ public class MusicService extends Service
     startForeground(NOTIFY_ID, not);
   }
 
-  public void setSong(int songIndex)
-  {
-    songPosn = songIndex;
-  }
-
   @Override
-  public boolean onError(MediaPlayer mp, int what, int extra)
+  public void onCompletion(MediaPlayer pMediaPlayer)
   {
-    Log.v("MUSIC PLAYER", "Playback Error");
-    mp.reset();
-    return false;
-  }
-
-  @Override
-  public void onCompletion(MediaPlayer mp)
-  {
-    if (player.getCurrentPosition() > 0)
+    if (this.player.getCurrentPosition() > 0)
     {
-      mp.reset();
+      pMediaPlayer.reset();
       playNext();
     }
   }
 
   @Override
-  public void onDestroy()
+  public boolean onError(MediaPlayer pMediaPlayer, int pErrorType, int pExtra)
   {
-    stopForeground(true);
+    Log.v("MUSIC PLAYER", "Playback Error");
+    pMediaPlayer.reset();
+    return false;
   }
 
+  //TODO: Make it private
+  public void initMusicPlayer()
+  {
+    this.player.setWakeMode(getApplicationContext(),
+                            PowerManager.PARTIAL_WAKE_LOCK);
+    this.player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    this.player.setOnPreparedListener(this);
+    this.player.setOnCompletionListener(this);
+    this.player.setOnErrorListener(this);
+  }
+
+  public void setList(ArrayList<Song> theSongs)
+  {
+    this.songList = theSongs;
+  }
+
+  // Capture service interface
+  public class MusicBinder extends Binder
+  {
+    MusicService getService()
+    {
+      return MusicService.this;
+    }
+  }
+
+  public void setShuffle()
+  {
+    if (this.shuffle)
+    {
+      this.shuffle = false;
+    }
+    else
+    {
+      this.shuffle = true;
+    }
+  }
+
+  public void playSong()
+  {
+    this.player.reset();
+    //get song
+    Song playSong = songList.get(this.songPosition);
+    songTitle = playSong.getTitle();
+    //get id
+    long currSong = playSong.getID();
+    //set uri
+    Uri trackUri = ContentUris.withAppendedId(
+      android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+      currSong);
+
+    try
+    {
+      this.player.setDataSource(getApplicationContext(), trackUri);
+    }
+    catch(Exception e)
+    {
+      Log.e("MUSIC SERVICE", "Error setting data source", e);
+    }
+
+    this.player.prepareAsync();
+  }
+
+  public int getPosn()
+  {
+    return this.player.getCurrentPosition();
+  }
+
+  public int getDur()
+  {
+    return this.player.getDuration();
+  }
+
+  public boolean isPng()
+  {
+    return this.player.isPlaying();
+  }
+
+  public void pausePlayer()
+  {
+    this.player.pause();
+  }
+
+  public void seek(int pPositionNumber)
+  {
+    this.player.seekTo(pPositionNumber);
+  }
+
+  public void go()
+  {
+    this.player.start();
+  }
+
+  public void playPrev()
+  {
+    this.songPosition--;
+    if (this.songPosition < 0)
+    {
+      this.songPosition = this.songList.size() - 1;
+    }
+    playSong();
+  }
+
+  public void playNext()
+  {
+    if (this.shuffle)
+    {
+      int newSong = this.songPosition;
+      while (newSong == this.songPosition)
+      {
+        newSong = rand.nextInt(this.songList.size());
+      }
+      songPosition = newSong;
+    }
+    else
+    {
+      this.songPosition++;
+      if (this.songPosition >= this.songList.size())
+      {
+        this.songPosition = 0;
+      }
+    }
+    playSong();
+  }
+
+  public void setSong(int pSongIndex)
+  {
+    this.songPosition = pSongIndex;
+  }
 }

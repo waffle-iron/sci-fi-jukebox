@@ -16,19 +16,20 @@ public class SongAdapter extends BaseAdapter
   private ArrayList<Song> songs;
   private LayoutInflater songInf;
 
-  public SongAdapter(Context c, ArrayList<Song> theSongs)
+  public SongAdapter(Context pContext, ArrayList<Song> pTheSongs)
   {
-    this.songs = theSongs;
-    this.songInf = LayoutInflater.from(c);
+    this.songs = pTheSongs;
+    this.songInf = LayoutInflater.from(pContext);
   }
 
   @Override
-  public int getCount() {
-    return songs.size();
+  public int getCount()
+  {
+    return this.songs.size();
   }
  
   @Override
-  public Object getItem(int arg0)
+  public Object getItem(int pItem)
   {
     return null;
   }
@@ -40,19 +41,19 @@ public class SongAdapter extends BaseAdapter
   }
  
   @Override
-  public View getView(int position, View convertView, ViewGroup parent)
+  public View getView(int pPosition, View pConvertView, ViewGroup pParent)
   {
-    LinearLayout songLay = (LinearLayout)songInf.inflate(R.layout.song,
-                            parent, false);
+    LinearLayout songLay = (LinearLayout)this.songInf.inflate(R.layout.song,
+                            pParent, false);
     TextView songView = (TextView)songLay.findViewById(R.id.song_title);
     TextView artistView = (TextView)songLay.findViewById(R.id.song_artist);
 
-    Song currSong = songs.get(position);
+    Song currSong = songs.get(pPosition);
 
     songView.setText(currSong.getTitle());
     artistView.setText(currSong.getArtist());
 
-    songLay.setTag(position);
+    songLay.setTag(pPosition);
     return songLay;
   }
  

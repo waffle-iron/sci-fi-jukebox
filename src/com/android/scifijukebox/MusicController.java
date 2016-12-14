@@ -5,9 +5,9 @@ import android.widget.MediaController;
 
 public class MusicController extends MediaController
 {
-  public MusicController(Context context)
+  public MusicController(Context pContext)
   {
-    super(context);
+    super(pContext);
   }
 
   public void hide()

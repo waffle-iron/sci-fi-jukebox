@@ -27,216 +27,220 @@ import android.view.Menu;
 
 public class SciFiJukebox extends Activity implements MediaPlayerControl
 {
-    private ArrayList<Song> songList;
-    private ListView songView;
+  private ArrayList<Song> songList;
+  private ListView songView;
 
-    private MusicService musicSrv;
-    private Intent playIntent;
-    private boolean musicBound = false;
-    private MusicController controller;
+  private MusicService musicService;
+  private Intent playIntent;
+  private boolean musicBound = false;
+  private MusicController controller;
 
-    private String songTitle = "";
-    private static final int NOTIFY_ID = 1;
+  private String songTitle = "";
+  private static final int NOTIFY_ID = 1;
 
-    private boolean paused = false;
-    private boolean playbackPaused = false;
+  private boolean paused = false;
+  private boolean playbackPaused = false;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-      super.onCreate(savedInstanceState);
-      setContentView(R.layout.main);
+  @Override
+  public void onCreate(Bundle savedInstanceState)
+  {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.main);
 
-      this.songView = (ListView)findViewById(R.id.song_list);
-      this.songList = new ArrayList<Song>();
+    this.songView = (ListView)findViewById(R.id.song_list);
+    this.songList = new ArrayList<Song>();
 
-      getSongList();
-      Collections.sort(this.songList, new Comparator<Song>()
+    getSongList();
+    Collections.sort(this.songList, new Comparator<Song>()
+      {
+        public int compare(Song a, Song b)
         {
-          public int compare(Song a, Song b)
-          {
-            return a.getTitle().compareTo(b.getTitle());
-          }
-        });
+          return a.getTitle().compareTo(b.getTitle());
+        }
+      });
 
-      SongAdapter songAdt = new SongAdapter(this, this.songList);
-      songView.setAdapter(songAdt);
+    SongAdapter songAdt = new SongAdapter(this, this.songList);
+    songView.setAdapter(songAdt);
+    setController();
+  }
+
+  @Override
+  protected void onPause()
+  {
+    super.onPause();
+    this.paused = true;
+  }
+
+  @Override
+  protected void onResume()
+  {
+    super.onResume();
+    if (this.paused)
+    {
       setController();
+      this.paused = false;
+    }
+  }
+
+  @Override
+  protected void onStop()
+  {
+    this.controller.hide();
+    super.onStop();
+  }
+
+  //connect to the service
+  private ServiceConnection musicConnection = new ServiceConnection()
+  {
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service)
+    {
+      MusicBinder binder = (MusicBinder)service;
+      //get service
+      musicService = binder.getService();
+      //pass list
+      musicService.setList(songList);
+      musicBound = true;
     }
 
     @Override
-    protected void onPause()
+    public void onServiceDisconnected(ComponentName pName)
     {
-      super.onPause();
-      paused = true;
+      musicBound = false;
     }
+  };
 
-    @Override
-    protected void onResume()
+  @Override
+  public boolean onCreateOptionsMenu(Menu pMenu)
+  {
+    getMenuInflater().inflate(R.menu.main, pMenu);
+    return true;
+  }
+
+  public void getSongList()
+  {
+    //Retrieve song info
+    ContentResolver musicResolver = getContentResolver();
+    //TODO: Uri uri= Uri.parse("file:///"+song.getPath());
+    Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+    Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+
+    if (musicCursor != null && musicCursor.moveToFirst())
     {
-      super.onResume();
-      if (paused)
+      String title = android.provider.MediaStore.Audio.Media.TITLE;
+      String id = android.provider.MediaStore.Audio.Media._ID;
+      String artist = android.provider.MediaStore.Audio.Media.ARTIST;
+
+      int titleColumn = musicCursor.getColumnIndex(title);
+      int idColumn = musicCursor.getColumnIndex(id);
+      int artistColumn = musicCursor.getColumnIndex(artist);
+      //Add songs to list
+      do
       {
-        setController();
-        paused = false;
-      }
+        long thisId = musicCursor.getLong(idColumn);
+        String thisTitle = musicCursor.getString(titleColumn);
+        String thisArtist = musicCursor.getString(artistColumn);
+        this.songList.add(new Song(thisId, thisTitle, thisArtist));
+      } while(musicCursor.moveToNext());
     }
-
-    @Override
-    protected void onStop()
-    {
-      controller.hide();
-      super.onStop();
-    }
-
-    //connect to the service
-    private ServiceConnection musicConnection = new ServiceConnection()
-    { 
-      @Override
-      public void onServiceConnected(ComponentName name, IBinder service)
-      {
-        MusicBinder binder = (MusicBinder)service;
-        //get service
-        musicSrv = binder.getService();
-        //pass list
-        musicSrv.setList(songList);
-        musicBound = true;
-      }
-     
-      @Override
-      public void onServiceDisconnected(ComponentName name)
-      {
-        musicBound = false;
-      }
-    };
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-      getMenuInflater().inflate(R.menu.main, menu);
-      return true;
-    }
-
-    public void getSongList()
-    {
-      //Retrieve song info
-      ContentResolver musicResolver = getContentResolver();
-      Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-      Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
-
-      if (musicCursor != null && musicCursor.moveToFirst())
-      {
-        int titleColumn = musicCursor.getColumnIndex(
-              android.provider.MediaStore.Audio.Media.TITLE);
-        int idColumn = musicCursor.getColumnIndex(
-              android.provider.MediaStore.Audio.Media._ID);
-        int artistColumn = musicCursor.getColumnIndex(
-              android.provider.MediaStore.Audio.Media.ARTIST);
-        //Add songs to list
-        do
-        {
-          long thisId = musicCursor.getLong(idColumn);
-          String thisTitle = musicCursor.getString(titleColumn);
-          String thisArtist = musicCursor.getString(artistColumn);
-          this.songList.add(new Song(thisId, thisTitle, thisArtist));
-        } while(musicCursor.moveToNext());
-      }
-    }
+  }
 
   private void setController()
   {
-    controller = new MusicController(this);
+    this.controller = new MusicController(this);
 
-    //XXX: THIS IS TERRIBLE! FIX IT
-    controller.setPrevNextListeners(new View.OnClickListener()
+    View.OnClickListener nextMusic = new View.OnClickListener()
+    {
+      @Override
+      public void onClick(View v)
       {
-        @Override
-        public void onClick(View v)
-        {
-          playNext();
-        }
-      }, new View.OnClickListener()
-         {
-          @Override
-          public void onClick(View v)
-          {
-            playPrev();
-          }
-       });
-    controller.setMediaPlayer(this);
-    controller.setAnchorView(findViewById(R.id.song_list));
-    controller.setEnabled(true);
+        playNext();
+      }
+    };
+    View.OnClickListener previousMusic = new View.OnClickListener()
+    {
+      @Override
+      public void onClick(View v)
+      {
+        playPrev();
+      }
+    };
+
+    this.controller.setPrevNextListeners(nextMusic, previousMusic);
+    this.controller.setMediaPlayer(this);
+    this.controller.setAnchorView(findViewById(R.id.song_list));
+    this.controller.setEnabled(true);
   }
 
   @Override
   protected void onStart()
   {
     super.onStart();
-    if(playIntent == null)
+    if (this.playIntent == null)
     {
-      playIntent = new Intent(this, MusicService.class);
-      bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-      startService(playIntent);
+      this.playIntent = new Intent(this, MusicService.class);
+      bindService(this.playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+      startService(this.playIntent);
     }
   }
 
-  public void songPicked(View view)
+  public void songPicked(View pView)
   {
-    musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
-    musicSrv.playSong();
-    if (playbackPaused)
+    this.musicService.setSong(Integer.parseInt(pView.getTag().toString()));
+    this.musicService.playSong();
+    if (this.playbackPaused)
     {
       setController();
-      playbackPaused = false;
+      this.playbackPaused = false;
     }
-    controller.show(0);
+    this.controller.show(0);
   }
 
   @Override
-  public boolean onOptionsItemSelected(MenuItem item)
+  public boolean onOptionsItemSelected(MenuItem pItem)
   {
     //menu item selected
-    switch (item.getItemId())
+    switch (pItem.getItemId())
     {
       case R.id.action_shuffle:
-        musicSrv.setShuffle();
+        this.musicService.setShuffle();
         break;
       case R.id.action_end:
-        stopService(playIntent);
-        musicSrv=null;
+        stopService(this.playIntent);
+        this.musicService = null;
         System.exit(0);
         break;
     }
-    return super.onOptionsItemSelected(item);
+    return super.onOptionsItemSelected(pItem);
   }
 
   private void playNext()
   {
-    musicSrv.playNext();
-    if (playbackPaused)
+    this.musicService.playNext();
+    if (this.playbackPaused)
     {
       setController();
-      playbackPaused = false;
+      this.playbackPaused = false;
     }
-    controller.show(0);
+    this.controller.show(0);
   }
 
   private void playPrev()
   {
-    musicSrv.playPrev();
+    this.musicService.playPrev();
     if (playbackPaused)
     {
       setController();
-      playbackPaused = false;
+      this.playbackPaused = false;
     }
-    controller.show(0);
+    this.controller.show(0);
   }
 
   @Override
   protected void onDestroy()
   {
     stopService(playIntent);
-    musicSrv=null;
+    this.musicService = null;
     super.onDestroy();
   }
 
@@ -273,9 +277,9 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   public int getCurrentPosition()
   {
-    if (musicSrv != null && musicBound && musicSrv.isPng())
+    if (this.musicService != null && this.musicBound && this.musicService.isPng())
     {
-      return musicSrv.getPosn();
+      return this.musicService.getPosn();
     }
     else
     {
@@ -286,9 +290,9 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   public int getDuration()
   {
-    if (musicSrv != null && musicBound && musicSrv.isPng())
+    if (this.musicService != null && this.musicBound && this.musicService.isPng())
     {
-      return musicSrv.getDur();
+      return this.musicService.getDur();
     }
     else
     {
@@ -299,27 +303,29 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   public boolean isPlaying()
   {
-    if(musicSrv!=null && musicBound)
-      return musicSrv.isPng();
+    if (this.musicService!=null && this.musicBound)
+    {
+      return this.musicService.isPng();
+    }
     return false;
   }
 
   @Override
   public void pause()
   {
-    playbackPaused = true;
-    musicSrv.pausePlayer();
+    this.playbackPaused = true;
+    this.musicService.pausePlayer();
   }
 
   @Override
-  public void seekTo(int pos)
+  public void seekTo(int pPosition)
   {
-    musicSrv.seek(pos);
+    this.musicService.seek(pPosition);
   }
 
   @Override
   public void start()
   {
-    musicSrv.go();
+    this.musicService.go();
   }
 }

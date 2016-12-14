@@ -6,11 +6,11 @@ public class Song
   private String title;
   private String artist;
 
-  public Song(long songID, String songTitle, String songArtist)
+  public Song(long pSongID, String pSongTitle, String pSongArtist)
   {
-    this.id = songID;
-    this.title = songTitle;
-    this.artist = songArtist;
+    this.id = pSongID;
+    this.title = pSongTitle;
+    this.artist = pSongArtist;
   }
 
   public long getID()
