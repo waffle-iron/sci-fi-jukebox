@@ -25,6 +25,8 @@ import android.view.View;
 
 import android.view.Menu;
 
+import android.util.Log;
+
 public class SciFiJukebox extends Activity implements MediaPlayerControl
 {
   private ArrayList<Song> songList;
@@ -37,6 +39,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
   private String songTitle = "";
   private static final int NOTIFY_ID = 1;
+  private static final String SCIFI_JUKEBOX = "jukebox";
 
   private boolean paused = false;
   private boolean playbackPaused = false;
@@ -62,6 +65,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     SongAdapter songAdt = new SongAdapter(this, this.songList);
     songView.setAdapter(songAdt);
     setController();
+    Log.i(SCIFI_JUKEBOX, "Activity initialized successfully");
   }
 
   @Override
@@ -121,7 +125,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   {
     //Retrieve song info
     ContentResolver musicResolver = getContentResolver();
-    //TODO: Uri uri= Uri.parse("file:///"+song.getPath());
     Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
@@ -227,7 +230,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
   private void playPrev()
   {
-    this.musicService.playPrev();
+    this.musicService.playPrevious();
     if (playbackPaused)
     {
       setController();
@@ -277,9 +280,10 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   public int getCurrentPosition()
   {
-    if (this.musicService != null && this.musicBound && this.musicService.isPng())
+    if (this.musicService != null && this.musicBound
+        && this.musicService.isPlaying())
     {
-      return this.musicService.getPosn();
+      return this.musicService.getPosition();
     }
     else
     {
@@ -290,9 +294,10 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   public int getDuration()
   {
-    if (this.musicService != null && this.musicBound && this.musicService.isPng())
+    if (this.musicService != null && this.musicBound
+        && this.musicService.isPlaying())
     {
-      return this.musicService.getDur();
+      return this.musicService.getDuration();
     }
     else
     {
@@ -305,7 +310,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   {
     if (this.musicService!=null && this.musicBound)
     {
-      return this.musicService.isPng();
+      return this.musicService.isPlaying();
     }
     return false;
   }

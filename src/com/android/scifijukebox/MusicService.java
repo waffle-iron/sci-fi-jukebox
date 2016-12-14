@@ -32,6 +32,8 @@ public class MusicService extends Service
   private boolean shuffle = false;
   private Random rand;
 
+  private static final String SCIFI_JUKEBOX_SERVICE = "jukebox-service";
+
   // Service methods
   @Override
   public void onCreate()
@@ -47,19 +49,20 @@ public class MusicService extends Service
   public void onDestroy()
   {
     stopForeground(true);
+    Log.i(SCIFI_JUKEBOX_SERVICE, "Stopped jukebox service");
   }
 
   @Override
-  public IBinder onBind(Intent binder)
+  public IBinder onBind(Intent pBinder)
   {
-      return musicBind;
+      return this.musicBind;
   }
 
   @Override
-  public boolean onUnbind(Intent intent)
+  public boolean onUnbind(Intent pIntent)
   {
-    player.stop();
-    player.release();
+    this.player.stop();
+    this.player.release();
     return false;
   }
 
@@ -99,13 +102,12 @@ public class MusicService extends Service
   @Override
   public boolean onError(MediaPlayer pMediaPlayer, int pErrorType, int pExtra)
   {
-    Log.v("MUSIC PLAYER", "Playback Error");
+    Log.v(SCIFI_JUKEBOX_SERVICE, "Playback Error");
     pMediaPlayer.reset();
     return false;
   }
 
-  //TODO: Make it private
-  public void initMusicPlayer()
+  private void initMusicPlayer()
   {
     this.player.setWakeMode(getApplicationContext(),
                             PowerManager.PARTIAL_WAKE_LOCK);
@@ -113,11 +115,12 @@ public class MusicService extends Service
     this.player.setOnPreparedListener(this);
     this.player.setOnCompletionListener(this);
     this.player.setOnErrorListener(this);
+    Log.i(SCIFI_JUKEBOX_SERVICE, "MusicPlayer initialized successfully");
   }
 
-  public void setList(ArrayList<Song> theSongs)
+  public void setList(ArrayList<Song> pTheSongs)
   {
-    this.songList = theSongs;
+    this.songList = pTheSongs;
   }
 
   // Capture service interface
@@ -160,23 +163,23 @@ public class MusicService extends Service
     }
     catch(Exception e)
     {
-      Log.e("MUSIC SERVICE", "Error setting data source", e);
+      Log.e(SCIFI_JUKEBOX_SERVICE, "Error setting data source", e);
     }
 
     this.player.prepareAsync();
   }
 
-  public int getPosn()
+  public int getPosition()
   {
     return this.player.getCurrentPosition();
   }
 
-  public int getDur()
+  public int getDuration()
   {
     return this.player.getDuration();
   }
 
-  public boolean isPng()
+  public boolean isPlaying()
   {
     return this.player.isPlaying();
   }
@@ -196,7 +199,7 @@ public class MusicService extends Service
     this.player.start();
   }
 
-  public void playPrev()
+  public void playPrevious()
   {
     this.songPosition--;
     if (this.songPosition < 0)
