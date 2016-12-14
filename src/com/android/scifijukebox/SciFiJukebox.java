@@ -45,9 +45,9 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   private boolean playbackPaused = false;
 
   @Override
-  public void onCreate(Bundle savedInstanceState)
+  public void onCreate(Bundle pSavedInstanceState)
   {
-    super.onCreate(savedInstanceState);
+    super.onCreate(pSavedInstanceState);
     setContentView(R.layout.main);
 
     this.songView = (ListView)findViewById(R.id.song_list);
@@ -97,9 +97,9 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   private ServiceConnection musicConnection = new ServiceConnection()
   {
     @Override
-    public void onServiceConnected(ComponentName name, IBinder service)
+    public void onServiceConnected(ComponentName name, IBinder pService)
     {
-      MusicBinder binder = (MusicBinder)service;
+      MusicBinder binder = (MusicBinder)pService;
       //get service
       musicService = binder.getService();
       //pass list
@@ -232,7 +232,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   private void playPrev()
   {
     this.musicService.playPrevious();
-    if (playbackPaused)
+    if (this.playbackPaused)
     {
       setController();
       this.playbackPaused = false;
@@ -243,7 +243,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   protected void onDestroy()
   {
-    stopService(playIntent);
+    stopService(this.playIntent);
     this.musicService = null;
     super.onDestroy();
   }
@@ -309,7 +309,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   public boolean isPlaying()
   {
-    if (this.musicService!=null && this.musicBound)
+    if (this.musicService != null && this.musicBound)
     {
       return this.musicService.isPlaying();
     }

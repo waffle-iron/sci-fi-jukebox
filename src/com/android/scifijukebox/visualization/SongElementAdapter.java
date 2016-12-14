@@ -43,7 +43,7 @@ public class SongElementAdapter extends BaseAdapter
   }
 
   @Override
-  public long getItemId(int arg0)
+  public long getItemId(int pId)
   {
     return 0;
   }
