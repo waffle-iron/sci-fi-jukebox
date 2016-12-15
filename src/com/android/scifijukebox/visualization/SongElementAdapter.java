@@ -14,7 +14,7 @@ import android.widget.BaseAdapter;
 import android.util.Log;
 
 /**
-* Adapter for each music inside list.
+* Adapter for each music inside list
 * @class SongElementAdapter
 */
 public class SongElementAdapter extends BaseAdapter

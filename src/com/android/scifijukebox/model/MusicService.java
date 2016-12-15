@@ -16,15 +16,20 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
+/**
+*  This class is a local service responsible for handling music elements.
+*/
 public class MusicService extends Service
                           implements MediaPlayer.OnPreparedListener,
                                      MediaPlayer.OnErrorListener,
                                      MediaPlayer.OnCompletionListener
 {
+  // Play music
   private MediaPlayer player;
   private ArrayList<Song> songList;
   private int songPosition;
-  private String songTitle="";
+  private String songTitle = "";
+
   private static final int NOTIFY_ID = 1;
 
   private final IBinder musicBind = new MusicBinder();
@@ -42,7 +47,7 @@ public class MusicService extends Service
     this.songPosition = 0;
     this.rand = new Random();
     this.player = new MediaPlayer();
-    initMusicPlayer();
+    this.initMusicPlayer();
   }
 
   @Override
@@ -66,7 +71,6 @@ public class MusicService extends Service
     return false;
   }
 
-  // MediaPlayer interface
   @Override
   public void onPrepared(MediaPlayer pMediaPlayer)
   {
@@ -115,6 +119,7 @@ public class MusicService extends Service
     this.player.setOnPreparedListener(this);
     this.player.setOnCompletionListener(this);
     this.player.setOnErrorListener(this);
+
     Log.i(SCIFI_JUKEBOX_SERVICE, "MusicPlayer initialized successfully");
   }
 

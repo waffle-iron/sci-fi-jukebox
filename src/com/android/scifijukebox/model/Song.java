@@ -1,5 +1,8 @@
 package com.android.scifijukebox;
 
+/**
+*  This class is responsible for keep songs informations
+*/
 public class Song
 {
   private long id;
