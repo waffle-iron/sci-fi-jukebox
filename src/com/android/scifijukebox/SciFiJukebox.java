@@ -41,6 +41,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   private ArrayList<Song> songList;
   private ListView songView;
   private String pathMusic = "scifi-jukebox";
+  private ArrayList<String> album;
 
   // Attributes for handling the communication between Activity and Service
   private MusicService musicService;
@@ -65,8 +66,10 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
     this.initDefaultDirectory();
     this.initMusicList();
+    this.getMusicFolders();
 
     SongElementAdapter adapter = new SongElementAdapter(this, this.songList);
+
     this.songView.setAdapter(adapter);
     this.setController();
     Log.i(SCIFI_JUKEBOX, "Activity initialized successfully");
@@ -128,11 +131,25 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   /**
   *  Initialize elements related to music list
   */
+  private void getMusicFolders()
+  {
+    this.album = new ArrayList<String>();
+
+    File[] files = new File(this.getRootDirectory()).listFiles();
+
+    for (File aFile : files)
+    {
+      if (aFile.isDirectory())
+      {
+        this.album.add(aFile.toString());
+      }
+    }
+  }
+
   private void initMusicList()
   {
     this.songView = (ListView)findViewById(R.id.song_list);
     this.songList = new ArrayList<Song>();
-
     getSongList();
     Collections.sort(this.songList, new Comparator<Song>()
       {
@@ -146,21 +163,27 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   private void initDefaultDirectory()
   {
     boolean success = true;
-    String directoryPath = new File(Environment.getExternalStorageDirectory(),
-                                    "Music").toString();
-    directoryPath = new File(directoryPath, this.pathMusic).toString();
 
-    File folder = new File(directoryPath);
+    File folder = new File(this.getRootDirectory());
 
     if (!folder.exists())
     {
       success = folder.mkdir();
-      Log.i(SCIFI_JUKEBOX, "Created default directory in: " + directoryPath);
+      Log.i(SCIFI_JUKEBOX, "Created default directory in: " +
+            this.getRootDirectory());
     }
     else
     {
       Log.i(SCIFI_JUKEBOX, "Default directory already created");
     }
+  }
+
+  private String getRootDirectory()
+  {
+    String directoryPath = new File(Environment.getExternalStorageDirectory(),
+                                    "Music").toString();
+    directoryPath = new File(directoryPath, this.pathMusic).toString();
+    return directoryPath;
   }
 
   /**
