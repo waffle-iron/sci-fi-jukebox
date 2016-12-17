@@ -4,10 +4,12 @@ import com.android.scifijukebox.MusicService.MusicBinder;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.io.File;
 
 import android.net.Uri;
 import android.content.ContentResolver;
@@ -38,6 +40,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   // List of musics
   private ArrayList<Song> songList;
   private ListView songView;
+  private String pathMusic = "scifi-jukebox";
 
   // Attributes for handling the communication between Activity and Service
   private MusicService musicService;
@@ -60,6 +63,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     super.onCreate(pSavedInstanceState);
     setContentView(R.layout.main);
 
+    this.initDefaultDirectory();
     this.initMusicList();
 
     SongElementAdapter adapter = new SongElementAdapter(this, this.songList);
@@ -139,6 +143,26 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
       });
   }
 
+  private void initDefaultDirectory()
+  {
+    boolean success = true;
+    String directoryPath = new File(Environment.getExternalStorageDirectory(),
+                                    "Music").toString();
+    directoryPath = new File(directoryPath, this.pathMusic).toString();
+
+    File folder = new File(directoryPath);
+
+    if (!folder.exists())
+    {
+      success = folder.mkdir();
+      Log.i(SCIFI_JUKEBOX, "Created default directory in: " + directoryPath);
+    }
+    else
+    {
+      Log.i(SCIFI_JUKEBOX, "Default directory already created");
+    }
+  }
+
   /**
   *  Get music information from device. This method scan all directories to
   *  find musics.
@@ -147,11 +171,15 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   {
     //Retrieve song info
     ContentResolver musicResolver = getContentResolver();
+    String[] filterBy = {"%" + this.pathMusic + "%"};
     Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-    Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+    String data = android.provider.MediaStore.Audio.Media.DATA;
+    Cursor musicCursor = musicResolver.query(musicUri, null, data + " like ? ",
+                                             filterBy, null);
 
     if (musicCursor != null && musicCursor.moveToFirst())
     {
+      // Get columns names
       String title = android.provider.MediaStore.Audio.Media.TITLE;
       String id = android.provider.MediaStore.Audio.Media._ID;
       String artist = android.provider.MediaStore.Audio.Media.ARTIST;
