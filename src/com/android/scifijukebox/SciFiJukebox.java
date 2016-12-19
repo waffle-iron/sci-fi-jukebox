@@ -40,8 +40,9 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   // List of musics
   private ArrayList<Song> songList;
   private ListView songView;
+  private ListView albumView;
   private String pathMusic = "scifi-jukebox";
-  private ArrayList<String> album;
+  private ArrayList<Album> albuns;
 
   // Attributes for handling the communication between Activity and Service
   private MusicService musicService;
@@ -66,12 +67,10 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
     this.initDefaultDirectory();
     this.initMusicList();
-    this.getMusicFolders();
+    this.initAlbumList();
 
-    SongElementAdapter adapter = new SongElementAdapter(this, this.songList);
+    this.setAlbumLayout();
 
-    this.songView.setAdapter(adapter);
-    this.setController();
     Log.i(SCIFI_JUKEBOX, "Activity initialized successfully");
   }
 
@@ -131,26 +130,24 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   /**
   *  Initialize elements related to music list
   */
-  private void getMusicFolders()
+  private void getAlbuns()
   {
-    this.album = new ArrayList<String>();
-
     File[] files = new File(this.getRootDirectory()).listFiles();
 
-    for (File aFile : files)
+    for (File file : files)
     {
-      if (aFile.isDirectory())
+      if (file.isDirectory())
       {
-        this.album.add(aFile.toString());
+        this.albuns.add(new Album(file.toString()));
       }
     }
   }
 
   private void initMusicList()
   {
-    this.songView = (ListView)findViewById(R.id.song_list);
+    this.songView = (ListView)findViewById(R.id.album_list);
     this.songList = new ArrayList<Song>();
-    getSongList();
+    getSongList(this.pathMusic);
     Collections.sort(this.songList, new Comparator<Song>()
       {
         public int compare(Song a, Song b)
@@ -158,6 +155,26 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
           return a.getTitle().compareTo(b.getTitle());
         }
       });
+  }
+
+  private void initAlbumList()
+  {
+    this.albumView = (ListView)findViewById(R.id.album_list);
+    this.albuns = new ArrayList<Album>();
+    this.getAlbuns();
+  }
+
+  private void setAlbumLayout()
+  {
+    AlbumElementAdapter adapter = new AlbumElementAdapter(this, this.albuns);
+    this.albumView.setAdapter(adapter);
+  }
+
+  private void setMusicLayout()
+  {
+    SongElementAdapter adapter = new SongElementAdapter(this, this.songList);
+    this.songView.setAdapter(adapter);
+    this.setController();
   }
 
   private void initDefaultDirectory()
@@ -190,15 +207,17 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   *  Get music information from device. This method scan all directories to
   *  find musics.
   */
-  private void getSongList()
+  private void getSongList(String pTargetPath)
   {
     //Retrieve song info
     ContentResolver musicResolver = getContentResolver();
-    String[] filterBy = {"%" + this.pathMusic + "%"};
+    String[] filterBy = {"%" + pTargetPath + "%"};
     Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     String data = android.provider.MediaStore.Audio.Media.DATA;
     Cursor musicCursor = musicResolver.query(musicUri, null, data + " like ? ",
                                              filterBy, null);
+
+    this.songList.clear();
 
     if (musicCursor != null && musicCursor.moveToFirst())
     {
@@ -249,7 +268,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
     this.controller.setPrevNextListeners(nextMusic, previousMusic);
     this.controller.setMediaPlayer(this);
-    this.controller.setAnchorView(findViewById(R.id.song_list));
+    this.controller.setAnchorView(findViewById(R.id.album_list));
     this.controller.setEnabled(true);
   }
 
@@ -282,6 +301,18 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
       this.playbackPaused = false;
     }
     this.controller.show(0);
+  }
+
+  public void albumPicked(View pView)
+  {
+    int albumToGo = ((AlbumElementWrapper)pView.getTag()).getPosition();
+    Uri uri = Uri.parse(albuns.get(albumToGo).getTitle());
+    String path = uri.getPath();
+    String idString = path.substring(path.lastIndexOf('/') + 1);
+
+    // Get a list of musics realted with album
+    this.getSongList(idString);
+    this.setMusicLayout();
   }
 
   @Override
