@@ -77,7 +77,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     super.onCreate(pSavedInstanceState);
     this.albumLayout = getLayoutInflater().inflate(R.layout.main, null);
     this.musicLayout = getLayoutInflater().inflate(R.layout.player, null);
-    setContentView(albumLayout);
+    setContentView(this.albumLayout);
 
     this.initDefaultDirectory();
     this.initMusicList();
@@ -219,10 +219,8 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
   public void playSong(View pView)
   {
-    Log.i(SCIFI_JUKEBOX, "caraiiii, play");
     int displayedChild = this.flipper.getDisplayedChild();
 
-    Log.i(SCIFI_JUKEBOX, "Toque: " + displayedChild);
     this.musicService.setSong(displayedChild);
     this.musicService.playSong();
     if (this.playbackPaused)
