@@ -11,7 +11,7 @@
     android:id="@+id/album_title"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:textColor="#B7E117"
+    android:textColor="#BAA580"
     android:textSize="20sp"
     android:textStyle="bold" />
 

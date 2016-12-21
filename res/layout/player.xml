@@ -4,13 +4,13 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="#D07326">
+    android:background="#443837">
 
   <LinearLayout
     android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:background="#D07326">
+    android:background="#443837">
     <ImageButton
       android:id="@+id/backward"
       android:layout_width="0dp"

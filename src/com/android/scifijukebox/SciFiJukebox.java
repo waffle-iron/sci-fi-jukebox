@@ -137,6 +137,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   public boolean onCreateOptionsMenu(Menu pMenu)
   {
+    //TODO: Remove it
     getMenuInflater().inflate(R.menu.main, pMenu);
     return true;
   }
