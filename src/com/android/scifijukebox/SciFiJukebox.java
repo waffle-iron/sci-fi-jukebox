@@ -16,6 +16,10 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.widget.ListView;
 import android.widget.MediaController.MediaPlayerControl;
+import android.widget.Button;
+import android.widget.ViewFlipper;
+import android.widget.TextView;
+import android.widget.ImageButton;
 
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -24,6 +28,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.view.MenuItem;
 import android.view.View;
+
+import android.view.animation.AnimationUtils;
+import android.view.ViewGroup;
 
 import android.view.Menu;
 
@@ -43,6 +50,8 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   private ListView albumView;
   private String pathMusic = "scifi-jukebox";
   private ArrayList<Album> albuns;
+  private ViewFlipper flipper;
+  private Button button;
 
   // Attributes for handling the communication between Activity and Service
   private MusicService musicService;
@@ -59,11 +68,16 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   private boolean paused = false;
   private boolean playbackPaused = false;
 
+  private View albumLayout;
+  private View musicLayout;
+
   @Override
   public void onCreate(Bundle pSavedInstanceState)
   {
     super.onCreate(pSavedInstanceState);
-    setContentView(R.layout.main);
+    this.albumLayout = getLayoutInflater().inflate(R.layout.main, null);
+    this.musicLayout = getLayoutInflater().inflate(R.layout.player, null);
+    setContentView(albumLayout);
 
     this.initDefaultDirectory();
     this.initMusicList();
@@ -172,10 +186,56 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
   private void setMusicLayout()
   {
-    SongElementAdapter adapter = new SongElementAdapter(this, this.songList);
-    this.songView.setAdapter(adapter);
-    this.setController();
+    setContentView(this.musicLayout);
+    this.flipper = (ViewFlipper)findViewById(R.id.details);
+
+    flipper.setInAnimation(AnimationUtils.loadAnimation(this, R.anim.push_left_in));
+    flipper.setOutAnimation(AnimationUtils.loadAnimation(this, R.anim.push_left_out));
+
+    ImageButton backward = (ImageButton)findViewById(R.id.backward);
+    ImageButton play = (ImageButton)findViewById(R.id.play);
+    ImageButton forward = (ImageButton)findViewById(R.id.forward);
+
+    for (Song song : this.songList)
+    {
+      Button btn = new Button(this);
+      btn.setText(song.getTitle());
+      this.flipper.addView(btn, new ViewGroup.LayoutParams(
+                                      ViewGroup.LayoutParams.FILL_PARENT,
+                                      ViewGroup.LayoutParams.FILL_PARENT));
+    }
   }
+
+  public void goBackward(View pView)
+  {
+    this.flipper.showPrevious();
+  }
+
+  public void goForward(View pView)
+  {
+    this.flipper.showNext();
+  }
+
+  public void playSong(View pView)
+  {
+    Log.i(SCIFI_JUKEBOX, "caraiiii, play");
+    int displayedChild = this.flipper.getDisplayedChild();
+
+    Log.i(SCIFI_JUKEBOX, "Toque: " + displayedChild);
+    this.musicService.setSong(displayedChild);
+    this.musicService.playSong();
+    if (this.playbackPaused)
+    {
+      this.playbackPaused = false;
+    }
+  }
+
+ // private void setMusicLayout()
+ // {
+ //   SongElementAdapter adapter = new SongElementAdapter(this, this.songList);
+ //   this.songView.setAdapter(adapter);
+ //   this.setController();
+ // }
 
   private void initDefaultDirectory()
   {
