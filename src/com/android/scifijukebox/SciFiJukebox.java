@@ -153,7 +153,11 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     {
       if (file.isDirectory())
       {
-        this.albuns.add(new Album(file.toString()));
+        String albumPath = file.toString();
+        String albumName = albumPath.substring(albumPath.lastIndexOf('/') + 1);
+
+        Album newAlbum = new Album(albumName, albumPath);
+        this.albuns.add(newAlbum);
       }
     }
   }
