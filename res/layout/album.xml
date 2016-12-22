@@ -1,18 +1,36 @@
-<LinearLayout
+<RelativeLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="fill_parent"
   android:layout_height="wrap_content"
   android:onClick="albumPicked"
-  android:orientation="vertical"
   android:padding="5dp">
+
+  <ImageView
+    android:id="@+id/album_icon"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignBaseline="@+id/album_title"
+     android:layout_alignParentLeft="true"
+    android:src="@drawable/unknown" />
 
   <TextView
     android:id="@+id/album_title"
+    android:layout_toRightOf="@+id/album_icon"
+    android:layout_alignParentTop="true"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:textColor="#BAA580"
     android:textSize="20sp"
     android:textStyle="bold" />
 
-</LinearLayout>
+  <TextView
+    android:id="@+id/album_description"
+    android:layout_below="@+id/album_title"
+    android:layout_toRightOf="@+id/album_icon"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:textColor="#BAA580"
+    android:textSize="20sp" />
+
+</RelativeLayout>

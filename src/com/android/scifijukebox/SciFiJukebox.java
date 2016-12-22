@@ -82,7 +82,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     this.initDefaultDirectory();
     this.initMusicList();
     this.initAlbumList();
-
     this.setAlbumLayout();
 
     Log.i(SCIFI_JUKEBOX, "Activity initialized successfully");

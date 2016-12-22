@@ -68,6 +68,9 @@ public class AlbumElementAdapter extends BaseAdapter
     Album currentAlbum = this.albuns.get(pPosition);
 
     wrapper.albumTitle().setText(currentAlbum.getTitle());
+    //TODO: Make it dynamic
+    wrapper.albumDescription().setText(R.string.description_album);
+    wrapper.albumIcon().setImageResource(R.drawable.unknown);
     wrapper.setPosition(pPosition);
 
     return (row);
