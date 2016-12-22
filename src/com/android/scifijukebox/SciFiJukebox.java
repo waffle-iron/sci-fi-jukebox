@@ -133,14 +133,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     }
   };
 
-  @Override
-  public boolean onCreateOptionsMenu(Menu pMenu)
-  {
-    //TODO: Remove it
-    getMenuInflater().inflate(R.menu.main, pMenu);
-    return true;
-  }
-
   /**
   *  Initialize elements related to music list
   */
@@ -375,25 +367,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     // Get a list of musics realted with album
     this.getSongList(idString);
     this.setMusicLayout();
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(MenuItem pItem)
-  {
-    //menu item selected
-    switch (pItem.getItemId())
-    {
-      case R.id.action_shuffle:
-        this.musicService.setShuffle();
-        break;
-      case R.id.action_end:
-        this.stopService(this.playIntent);
-        this.musicService = null;
-        System.exit(0);
-        break;
-    }
-
-    return super.onOptionsItemSelected(pItem);
   }
 
   /**
