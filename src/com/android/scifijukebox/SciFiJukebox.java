@@ -46,11 +46,11 @@ public class SciFiJukebox extends Activity
   // List of musics
   private ArrayList<Song> songList;
   private ListView songView;
-  private ListView albumView;
-  private String pathMusic = "scifi-jukebox";
-  private ArrayList<Album> albuns;
   private ViewFlipper flipper;
   private Button button;
+
+  // Album
+  private AlbumHandler albumHandler;
 
   // Attributes for handling the communication between Activity and Service
   private MusicService musicService;
@@ -66,6 +66,7 @@ public class SciFiJukebox extends Activity
   private boolean paused = false;
   private boolean playbackPaused = false;
 
+  //Layouts
   private View albumLayout;
   private View musicLayout;
 
@@ -73,14 +74,16 @@ public class SciFiJukebox extends Activity
   public void onCreate(Bundle pSavedInstanceState)
   {
     super.onCreate(pSavedInstanceState);
-    this.albumLayout = getLayoutInflater().inflate(R.layout.main, null);
+    this.albumHandler = new AlbumHandler(this);
+    this.albumLayout = this.albumHandler.getAlbumViewLayout();
+
     this.musicLayout = getLayoutInflater().inflate(R.layout.player, null);
+
     setContentView(this.albumLayout);
 
     this.initDefaultDirectory();
     this.initMusicList();
-    this.initAlbumList();
-    this.setAlbumLayout();
+    this.albumHandler.initAlbumList();
 
     Log.i(SCIFI_JUKEBOX, "Activity initialized successfully");
   }
@@ -129,51 +132,17 @@ public class SciFiJukebox extends Activity
     }
   };
 
-  /**
-  *  Initialize elements related to music list
-  */
-  private void getAlbuns()
-  {
-    File[] files = new File(this.getRootDirectory()).listFiles();
-
-    for (File file : files)
-    {
-      if (file.isDirectory())
-      {
-        String albumPath = file.toString();
-        String albumName = albumPath.substring(albumPath.lastIndexOf('/') + 1);
-
-        Album newAlbum = new Album(albumName, albumPath);
-        this.albuns.add(newAlbum);
-      }
-    }
-  }
-
   private void initMusicList()
   {
-    this.songView = (ListView)findViewById(R.id.album_list); //TODO: Remove it
     this.songList = new ArrayList<Song>();
-    getSongList(this.pathMusic);
+    this.getSongList(UtilJukebox.PATH_MUSIC);
     Collections.sort(this.songList, new Comparator<Song>()
+    {
+      public int compare(Song a, Song b)
       {
-        public int compare(Song a, Song b)
-        {
-          return a.getTitle().compareTo(b.getTitle());
-        }
-      });
-  }
-
-  private void initAlbumList()
-  {
-    this.albumView = (ListView)findViewById(R.id.album_list);
-    this.albuns = new ArrayList<Album>();
-    this.getAlbuns();
-  }
-
-  private void setAlbumLayout()
-  {
-    AlbumElementAdapter adapter = new AlbumElementAdapter(this, this.albuns);
-    this.albumView.setAdapter(adapter);
+        return a.getTitle().compareTo(b.getTitle());
+      }
+    });
   }
 
   private void setMusicLayout()
@@ -298,7 +267,8 @@ public class SciFiJukebox extends Activity
   public void albumPicked(View pView)
   {
     int albumToGo = ((AlbumElementWrapper)pView.getTag()).getPosition();
-    Uri uri = Uri.parse(albuns.get(albumToGo).getTitle());
+    Album albumTarget = this.albumHandler.getAlbumById(albumToGo);
+    Uri uri = Uri.parse(albumTarget.getTitle());
     String path = uri.getPath();
     String idString = path.substring(path.lastIndexOf('/') + 1);
 
