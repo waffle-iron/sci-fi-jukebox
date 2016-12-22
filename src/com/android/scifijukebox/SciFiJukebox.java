@@ -42,7 +42,7 @@ import android.util.Log;
 *  MusicService class.
 *  @see MusicService
 */
-public class SciFiJukebox extends Activity implements MediaPlayerControl
+public class SciFiJukebox extends Activity
 {
   // List of musics
   private ArrayList<Song> songList;
@@ -57,7 +57,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   private MusicService musicService;
   private Intent playIntent;
   private boolean musicBound = false;
-  private MusicController controller;
 
   // Attributes to handling notifications
   private String songTitle = "";
@@ -100,7 +99,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     super.onResume();
     if (this.paused)
     {
-      this.setController();
       this.paused = false;
     }
   }
@@ -108,7 +106,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   @Override
   protected void onStop()
   {
-    this.controller.hide();
     super.onStop();
   }
 
@@ -155,7 +152,7 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
 
   private void initMusicList()
   {
-    this.songView = (ListView)findViewById(R.id.album_list);
+    this.songView = (ListView)findViewById(R.id.album_list); //TODO: Remove it
     this.songList = new ArrayList<Song>();
     getSongList(this.pathMusic);
     Collections.sort(this.songList, new Comparator<Song>()
@@ -217,19 +214,19 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     int displayedChild = this.flipper.getDisplayedChild();
 
     this.musicService.setSong(displayedChild);
-    this.musicService.playSong();
-    if (this.playbackPaused)
+    if (this.isPlaying())
     {
-      this.playbackPaused = false;
+      pause();
     }
+    else
+    {
+      this.musicService.playSong();
+    }
+   // if (this.playbackPaused)
+   // {
+   //   this.playbackPaused = false;
+   // }
   }
-
- // private void setMusicLayout()
- // {
- //   SongElementAdapter adapter = new SongElementAdapter(this, this.songList);
- //   this.songView.setAdapter(adapter);
- //   this.setController();
- // }
 
   private void initDefaultDirectory()
   {
@@ -294,38 +291,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     }
   }
 
-  /**
-  *  Set music controller. Basically, this method is responsible for setup
-  *  playNext and playPrevious.
-  */
-  private void setController()
-  {
-    this.controller = new MusicController(this);
-
-    View.OnClickListener nextMusic = new View.OnClickListener()
-    {
-      @Override
-      public void onClick(View pView)
-      {
-        playNext();
-      }
-    };
-
-    View.OnClickListener previousMusic = new View.OnClickListener()
-    {
-      @Override
-      public void onClick(View pView)
-      {
-        playPrev();
-      }
-    };
-
-    this.controller.setPrevNextListeners(nextMusic, previousMusic);
-    this.controller.setMediaPlayer(this);
-    this.controller.setAnchorView(findViewById(R.id.album_list));
-    this.controller.setEnabled(true);
-  }
-
   @Override
   protected void onStart()
   {
@@ -337,24 +302,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
                   Context.BIND_AUTO_CREATE);
       startService(this.playIntent);
     }
-  }
-
-  /**
-  *  Each row of the list is tied up with this method. Basically, it takes the
-  *  position number clicked by the user and retrieve the information about it
-  *  to finally play the music.
-  */
-  public void songPicked(View pView)
-  {
-    int musicToPlay = ((SongElementWrapper)pView.getTag()).getPosition();
-    this.musicService.setSong(musicToPlay);
-    this.musicService.playSong();
-    if (this.playbackPaused)
-    {
-      this.setController();
-      this.playbackPaused = false;
-    }
-    this.controller.show(0);
   }
 
   public void albumPicked(View pView)
@@ -377,10 +324,8 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     this.musicService.playNext();
     if (this.playbackPaused)
     {
-      this.setController();
       this.playbackPaused = false;
     }
-    this.controller.show(0);
   }
 
   /**
@@ -391,13 +336,10 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     this.musicService.playPrevious();
     if (this.playbackPaused)
     {
-      this.setController();
       this.playbackPaused = false;
     }
-    this.controller.show(0);
   }
 
-  @Override
   protected void onDestroy()
   {
     this.stopService(this.playIntent);
@@ -405,31 +347,26 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
     super.onDestroy();
   }
 
-  @Override
   public boolean canPause()
   {
     return true;
   }
 
-  @Override
   public boolean canSeekBackward()
   {
     return true;
   }
 
-  @Override
   public boolean canSeekForward()
   {
     return true;
   }
 
-  @Override
   public int getAudioSessionId()
   {
     return 0;
   }
 
-  @Override
   public int getBufferPercentage()
   {
     return 0;
@@ -440,7 +377,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   *  verifications before return this value
   *  @return Return a integer representing the current position of music
   */
-  @Override
   public int getCurrentPosition()
   {
     if (this.musicService != null && this.musicBound
@@ -457,7 +393,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   /**
   *  Get music duration
   */
-  @Override
   public int getDuration()
   {
     if (this.musicService != null && this.musicBound
@@ -474,7 +409,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   /**
   *  Verify if music is playing
   */
-  @Override
   public boolean isPlaying()
   {
     if (this.musicService != null && this.musicBound)
@@ -487,7 +421,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   /**
   *  Pause music
   */
-  @Override
   public void pause()
   {
     this.playbackPaused = true;
@@ -498,7 +431,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   *  Get an id and seek this position in music
   *  @param pPosition integer presenting a position in a music
   */
-  @Override
   public void seekTo(int pPosition)
   {
     this.musicService.seek(pPosition);
@@ -507,7 +439,6 @@ public class SciFiJukebox extends Activity implements MediaPlayerControl
   /**
   *  Start playing music
   */
-  @Override
   public void start()
   {
     this.musicService.go();
