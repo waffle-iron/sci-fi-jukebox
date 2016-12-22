@@ -4,7 +4,6 @@ import com.android.scifijukebox.MusicService.MusicBinder;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Environment;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -232,26 +231,18 @@ public class SciFiJukebox extends Activity
   {
     boolean success = true;
 
-    File folder = new File(this.getRootDirectory());
+    File folder = new File(UtilJukebox.getRootDirectory());
 
     if (!folder.exists())
     {
       success = folder.mkdir();
       Log.i(SCIFI_JUKEBOX, "Created default directory in: " +
-            this.getRootDirectory());
+            UtilJukebox.getRootDirectory());
     }
     else
     {
       Log.i(SCIFI_JUKEBOX, "Default directory already created");
     }
-  }
-
-  private String getRootDirectory()
-  {
-    String directoryPath = new File(Environment.getExternalStorageDirectory(),
-                                    "Music").toString();
-    directoryPath = new File(directoryPath, this.pathMusic).toString();
-    return directoryPath;
   }
 
   /**
