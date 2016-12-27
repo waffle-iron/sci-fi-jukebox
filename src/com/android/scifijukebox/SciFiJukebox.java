@@ -6,32 +6,19 @@ import android.app.Activity;
 import android.os.Bundle;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.io.File;
 
 import android.net.Uri;
-import android.content.ContentResolver;
-import android.database.Cursor;
-import android.widget.ListView;
 import android.widget.MediaController.MediaPlayerControl;
-import android.widget.Button;
-import android.widget.ViewFlipper;
-import android.widget.TextView;
-import android.widget.ImageButton;
 
 import android.os.IBinder;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.view.MenuItem;
 import android.view.View;
 
-import android.view.animation.AnimationUtils;
 import android.view.ViewGroup;
-
-import android.view.Menu;
 
 import android.util.Log;
 
@@ -43,11 +30,8 @@ import android.util.Log;
 */
 public class SciFiJukebox extends Activity
 {
-  // List of musics
-  private ArrayList<Song> songList;
-  private ListView songView;
-  private ViewFlipper flipper;
-  private Button button;
+  // Musics
+  private MusicHandler musicHandler;
 
   // Album
   private AlbumHandler albumHandler;
@@ -77,12 +61,14 @@ public class SciFiJukebox extends Activity
     this.albumHandler = new AlbumHandler(this);
     this.albumLayout = this.albumHandler.getAlbumViewLayout();
 
-    this.musicLayout = getLayoutInflater().inflate(R.layout.player, null);
+    this.musicHandler = new MusicHandler(this);
+    this.musicLayout = this.musicHandler.getMusicViewLayout();
 
     setContentView(this.albumLayout);
 
     this.initDefaultDirectory();
-    this.initMusicList();
+
+    this.musicHandler.initMusicList();
     this.albumHandler.initAlbumList();
 
     Log.i(SCIFI_JUKEBOX, "Activity initialized successfully");
@@ -111,6 +97,19 @@ public class SciFiJukebox extends Activity
     super.onStop();
   }
 
+  @Override
+  protected void onStart()
+  {
+    super.onStart();
+    if (this.playIntent == null)
+    {
+      this.playIntent = new Intent(this, MusicService.class);
+      bindService(this.playIntent, this.musicConnection,
+                  Context.BIND_AUTO_CREATE);
+      startService(this.playIntent);
+    }
+  }
+
   // Connect activity to Service
   private ServiceConnection musicConnection = new ServiceConnection()
   {
@@ -121,7 +120,7 @@ public class SciFiJukebox extends Activity
       //get service
       musicService = binder.getService();
       //pass list
-      musicService.setList(songList);
+      musicService.setList(musicHandler.getSongList());
       musicBound = true;
     }
 
@@ -132,55 +131,45 @@ public class SciFiJukebox extends Activity
     }
   };
 
-  private void initMusicList()
+  private void initDefaultDirectory()
   {
-    this.songList = new ArrayList<Song>();
-    this.getSongList(UtilJukebox.PATH_MUSIC);
-    Collections.sort(this.songList, new Comparator<Song>()
+    boolean success = true;
+    File folder = new File(UtilJukebox.getRootDirectory());
+
+    if (!folder.exists())
     {
-      public int compare(Song a, Song b)
-      {
-        return a.getTitle().compareTo(b.getTitle());
-      }
-    });
+      success = folder.mkdir();
+      Log.i(SCIFI_JUKEBOX, "Created default directory in: " +
+            UtilJukebox.getRootDirectory());
+    }
+    else
+    {
+      Log.i(SCIFI_JUKEBOX, "Default directory already created");
+    }
+  }
+
+  public void albumPicked(View pView)
+  {
+    int albumToGo = ((AlbumElementWrapper)pView.getTag()).getPosition();
+    Album albumTarget = this.albumHandler.getAlbumById(albumToGo);
+    Uri uri = Uri.parse(albumTarget.getTitle());
+    String path = uri.getPath();
+    String idString = path.substring(path.lastIndexOf('/') + 1);
+
+    // Get a list of musics related with album
+    this.musicHandler.getSongList(idString);
+    this.setMusicLayout();
   }
 
   private void setMusicLayout()
   {
+    this.musicLayout = this.musicHandler.updateMusicLayout();
     setContentView(this.musicLayout);
-    this.flipper = (ViewFlipper)findViewById(R.id.details);
-
-    flipper.setInAnimation(AnimationUtils.loadAnimation(this, R.anim.push_left_in));
-    flipper.setOutAnimation(AnimationUtils.loadAnimation(this, R.anim.push_left_out));
-
-    ImageButton backward = (ImageButton)findViewById(R.id.backward);
-    ImageButton play = (ImageButton)findViewById(R.id.play);
-    ImageButton forward = (ImageButton)findViewById(R.id.forward);
-
-    for (Song song : this.songList)
-    {
-      Button btn = new Button(this);
-      btn.setText(song.getTitle());
-      this.flipper.addView(btn, new ViewGroup.LayoutParams(
-                                      ViewGroup.LayoutParams.FILL_PARENT,
-                                      ViewGroup.LayoutParams.FILL_PARENT));
-    }
-  }
-
-  public void goBackward(View pView)
-  {
-    this.flipper.showPrevious();
-  }
-
-  public void goForward(View pView)
-  {
-    this.flipper.showNext();
   }
 
   public void playSong(View pView)
   {
-    int displayedChild = this.flipper.getDisplayedChild();
-
+    int displayedChild = this.musicHandler.getCurrentMusic();
     this.musicService.setSong(displayedChild);
     if (this.isPlaying())
     {
@@ -196,85 +185,14 @@ public class SciFiJukebox extends Activity
    // }
   }
 
-  private void initDefaultDirectory()
+  public void goBackward(View pView)
   {
-    boolean success = true;
-
-    File folder = new File(UtilJukebox.getRootDirectory());
-
-    if (!folder.exists())
-    {
-      success = folder.mkdir();
-      Log.i(SCIFI_JUKEBOX, "Created default directory in: " +
-            UtilJukebox.getRootDirectory());
-    }
-    else
-    {
-      Log.i(SCIFI_JUKEBOX, "Default directory already created");
-    }
+    this.musicHandler.goBackward(pView);
   }
 
-  /**
-  *  Get music information from device. This method scan all directories to
-  *  find musics.
-  */
-  private void getSongList(String pTargetPath)
+  public void goForward(View pView)
   {
-    //Retrieve song info
-    ContentResolver musicResolver = getContentResolver();
-    String[] filterBy = {"%" + pTargetPath + "%"};
-    Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-    String data = android.provider.MediaStore.Audio.Media.DATA;
-    Cursor musicCursor = musicResolver.query(musicUri, null, data + " like ? ",
-                                             filterBy, null);
-
-    this.songList.clear();
-
-    if (musicCursor != null && musicCursor.moveToFirst())
-    {
-      // Get columns names
-      String title = android.provider.MediaStore.Audio.Media.TITLE;
-      String id = android.provider.MediaStore.Audio.Media._ID;
-      String artist = android.provider.MediaStore.Audio.Media.ARTIST;
-
-      int titleColumn = musicCursor.getColumnIndex(title);
-      int idColumn = musicCursor.getColumnIndex(id);
-      int artistColumn = musicCursor.getColumnIndex(artist);
-      //Add songs to list
-      do
-      {
-        long thisId = musicCursor.getLong(idColumn);
-        String thisTitle = musicCursor.getString(titleColumn);
-        String thisArtist = musicCursor.getString(artistColumn);
-        this.songList.add(new Song(thisId, thisTitle, thisArtist));
-      } while(musicCursor.moveToNext());
-    }
-  }
-
-  @Override
-  protected void onStart()
-  {
-    super.onStart();
-    if (this.playIntent == null)
-    {
-      this.playIntent = new Intent(this, MusicService.class);
-      bindService(this.playIntent, this.musicConnection,
-                  Context.BIND_AUTO_CREATE);
-      startService(this.playIntent);
-    }
-  }
-
-  public void albumPicked(View pView)
-  {
-    int albumToGo = ((AlbumElementWrapper)pView.getTag()).getPosition();
-    Album albumTarget = this.albumHandler.getAlbumById(albumToGo);
-    Uri uri = Uri.parse(albumTarget.getTitle());
-    String path = uri.getPath();
-    String idString = path.substring(path.lastIndexOf('/') + 1);
-
-    // Get a list of musics realted with album
-    this.getSongList(idString);
-    this.setMusicLayout();
+    this.musicHandler.goForward(pView);
   }
 
   /**
