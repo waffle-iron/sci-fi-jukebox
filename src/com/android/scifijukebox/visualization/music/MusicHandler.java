@@ -21,6 +21,12 @@ import android.widget.TextView;
 
 import android.content.Context;
 
+import android.util.Log;
+
+/**
+* Class responsible to handling player actions
+*
+*/
 public class MusicHandler
 {
   // List of musics
@@ -31,11 +37,25 @@ public class MusicHandler
   private Context base;
   private View musicLayout;
 
+  // Service
+  private MusicService musicService;
+
+  // Attributes responsible for controlling music
+  private boolean musicBound = false;
+  private boolean playbackPaused = false;
+  private boolean firstTime = true;
+  private int playbackPosition = 0;
+
+  private static final String SCIFI_JUKEBOX_PLAYER = "jukebox-player";
+
   public MusicHandler(Context pContext)
   {
     this.base = pContext;
   }
 
+  /**
+  * Build player layout.
+  */
   public View getMusicViewLayout()
   {
     LayoutInflater inflater = LayoutInflater.from(this.base);
@@ -57,6 +77,9 @@ public class MusicHandler
     });
   }
 
+  /**
+  * Update from one music to another
+  */
   public View updateMusicLayout()
   {
     LayoutInflater inflater = LayoutInflater.from(this.base);
@@ -84,19 +107,129 @@ public class MusicHandler
     return (this.musicLayout);
   }
 
+  /**
+  * Handling play and pause music. Basically we can find here the logic to
+  * handle play and pause in the same button.
+  */
+  public void playPauseMusic()
+  {
+    int displayedChild = this.flipper.getDisplayedChild();
+    this.musicService.setSong(displayedChild);
+    if (this.playbackPaused)
+    {
+      this.pauseMusic();
+    }
+    else
+    {
+      this.resumeMusic();
+    }
+
+    if (this.firstTime)
+    {
+      this.playbackPaused = true;
+      this.firstTime = false;
+      this.musicService.playSong();
+    }
+  }
+
+  private void pauseMusic()
+  {
+    this.playbackPaused = false;
+    this.playbackPosition = this.getCurrentPosition();
+    this.musicService.pausePlayer();
+  }
+
+  private void resumeMusic()
+  {
+    this.playbackPaused = true;
+    this.musicService.seek(this.playbackPosition);
+    this.musicService.go();
+  }
+
   public void goBackward(View pView)
   {
     this.flipper.showPrevious();
+    if (this.isPlaying())
+    {
+      this.musicService.playPrevious();
+    }
+    else
+    {
+      this.resetControlAttributes();
+    }
   }
 
   public void goForward(View pView)
   {
     this.flipper.showNext();
+    if (this.isPlaying())
+    {
+      this.musicService.playNext();
+    }
+    else
+    {
+      this.resetControlAttributes();
+    }
   }
 
-  public int getCurrentMusic()
+  private void resetControlAttributes()
   {
-    return (this.flipper.getDisplayedChild());
+    this.playbackPosition = 0;
+    this.firstTime = true;
+    this.playbackPaused = false;
+  }
+
+  /**
+  *  Get current position of music, notice that is required to make some
+  *  verifications before return this value
+  *  @return Return a integer representing the current position of music
+  */
+  private int getCurrentPosition()
+  {
+    if (this.musicService != null && this.musicBound
+        && this.musicService.isPlaying())
+    {
+      return this.musicService.getPosition();
+    }
+    else
+    {
+      return 0;
+    }
+  }
+
+  /**
+  *  Get music duration
+  */
+  public int getDuration()
+  {
+    if (this.musicService != null && this.musicBound
+        && this.musicService.isPlaying())
+    {
+      return this.musicService.getDuration();
+    }
+    else
+    {
+      return 0;
+    }
+  }
+
+  private boolean isPlaying()
+  {
+    if (this.musicService != null && this.musicBound)
+    {
+      return this.musicService.isPlaying();
+    }
+    return false;
+  }
+
+  public void setMusicService(MusicService pMusicService)
+  {
+    this.musicService = pMusicService;
+  }
+
+  public void setMusicBound(boolean pStatus)
+  {
+    this.musicBound = pStatus;
   }
 
   public ArrayList<Song> getSongList()
