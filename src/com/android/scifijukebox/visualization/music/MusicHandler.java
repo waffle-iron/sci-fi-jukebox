@@ -134,6 +134,8 @@ public class MusicHandler
 
   private void pauseMusic()
   {
+    ImageButton pauseButton = (ImageButton)this.musicLayout.findViewById(R.id.play);
+    pauseButton.setImageResource(R.drawable.pause);
     this.playbackPaused = false;
     this.playbackPosition = this.getCurrentPosition();
     this.musicService.pausePlayer();
@@ -141,6 +143,9 @@ public class MusicHandler
 
   private void resumeMusic()
   {
+    ImageButton playButton = (ImageButton)this.musicLayout.findViewById(R.id.play);
+    playButton.setImageResource(R.drawable.play);
+
     this.playbackPaused = true;
     this.musicService.seek(this.playbackPosition);
     this.musicService.go();
