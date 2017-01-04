@@ -60,7 +60,7 @@ public class MusicService extends Service
   @Override
   public IBinder onBind(Intent pBinder)
   {
-      return this.musicBind;
+    return this.musicBind;
   }
 
   @Override

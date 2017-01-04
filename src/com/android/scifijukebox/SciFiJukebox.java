@@ -49,6 +49,8 @@ public class SciFiJukebox extends Activity
   // Attributes responsible for controlling music
   private boolean paused = false;
   private boolean playbackPaused = false;
+  private boolean firstTime = true;
+  private int playbackPosition = 0;
 
   //Layouts
   private View albumLayout;
@@ -169,30 +171,61 @@ public class SciFiJukebox extends Activity
 
   public void playSong(View pView)
   {
-    int displayedChild = this.musicHandler.getCurrentMusic();
-    this.musicService.setSong(displayedChild);
-    if (this.isPlaying())
-    {
-      pause();
-    }
-    else
-    {
-      this.musicService.playSong();
-    }
-   // if (this.playbackPaused)
-   // {
-   //   this.playbackPaused = false;
-   // }
+    this.playMusic();
   }
 
   public void goBackward(View pView)
   {
     this.musicHandler.goBackward(pView);
+    if (this.isPlaying())
+    {
+      this.musicService.playPrevious();
+    }
+    else
+    {
+      this.playbackPosition = 0;
+      this.firstTime = true;
+      this.playbackPaused = false;
+    }
   }
 
   public void goForward(View pView)
   {
     this.musicHandler.goForward(pView);
+    if (this.isPlaying())
+    {
+      this.musicService.playNext();
+    }
+    else
+    {
+      this.playbackPosition = 0;
+      this.firstTime = true;
+      this.playbackPaused = false;
+    }
+  }
+
+  private void playMusic()
+  {
+    int displayedChild = this.musicHandler.getCurrentMusic();
+    this.musicService.setSong(displayedChild);
+    if (this.playbackPaused)
+    {
+      this.playbackPaused = false;
+      this.playbackPosition = this.musicService.getPosition();
+      this.musicService.pausePlayer();
+    }
+    else
+    {
+      this.playbackPaused = true;
+      this.musicService.seek(this.playbackPosition);
+      this.musicService.go();
+    }
+    if (this.firstTime)
+    {
+      this.playbackPaused = true;
+      this.firstTime = false;
+      this.musicService.playSong();
+    }
   }
 
   /**
