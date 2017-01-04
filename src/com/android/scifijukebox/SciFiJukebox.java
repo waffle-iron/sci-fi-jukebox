@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.io.File;
 
 import android.net.Uri;
-import android.widget.MediaController.MediaPlayerControl;
 
 import android.os.IBinder;
 import android.content.ComponentName;
@@ -39,7 +38,6 @@ public class SciFiJukebox extends Activity
   // Attributes for handling the communication between Activity and Service
   private MusicService musicService;
   private Intent playIntent;
-  private boolean musicBound = false;
 
   // Attributes to handling notifications
   private String songTitle = "";
@@ -48,7 +46,6 @@ public class SciFiJukebox extends Activity
 
   // Attributes responsible for controlling music
   private boolean paused = false;
-  private boolean playbackPaused = false;
 
   //Layouts
   private View albumLayout;
@@ -60,7 +57,6 @@ public class SciFiJukebox extends Activity
     super.onCreate(pSavedInstanceState);
     this.albumHandler = new AlbumHandler(this);
     this.albumLayout = this.albumHandler.getAlbumViewLayout();
-
     this.musicHandler = new MusicHandler(this);
     this.musicLayout = this.musicHandler.getMusicViewLayout();
 
@@ -110,6 +106,14 @@ public class SciFiJukebox extends Activity
     }
   }
 
+ @Override
+  protected void onDestroy()
+  {
+    this.stopService(this.playIntent);
+    this.musicService = null;
+    super.onDestroy();
+  }
+
   // Connect activity to Service
   private ServiceConnection musicConnection = new ServiceConnection()
   {
@@ -121,13 +125,14 @@ public class SciFiJukebox extends Activity
       musicService = binder.getService();
       //pass list
       musicService.setList(musicHandler.getSongList());
-      musicBound = true;
+      musicHandler.setMusicBound(true);
+      musicHandler.setMusicService(musicService);
     }
 
     @Override
     public void onServiceDisconnected(ComponentName pName)
     {
-      musicBound = false;
+      musicHandler.setMusicBound(false);
     }
   };
 
@@ -169,20 +174,7 @@ public class SciFiJukebox extends Activity
 
   public void playSong(View pView)
   {
-    int displayedChild = this.musicHandler.getCurrentMusic();
-    this.musicService.setSong(displayedChild);
-    if (this.isPlaying())
-    {
-      pause();
-    }
-    else
-    {
-      this.musicService.playSong();
-    }
-   // if (this.playbackPaused)
-   // {
-   //   this.playbackPaused = false;
-   // }
+    this.musicHandler.playPauseMusic();
   }
 
   public void goBackward(View pView)
@@ -193,133 +185,5 @@ public class SciFiJukebox extends Activity
   public void goForward(View pView)
   {
     this.musicHandler.goForward(pView);
-  }
-
-  /**
-  *  Go to next music and play it
-  */
-  private void playNext()
-  {
-    this.musicService.playNext();
-    if (this.playbackPaused)
-    {
-      this.playbackPaused = false;
-    }
-  }
-
-  /**
-  *  Go to previous music and play it
-  */
-  private void playPrev()
-  {
-    this.musicService.playPrevious();
-    if (this.playbackPaused)
-    {
-      this.playbackPaused = false;
-    }
-  }
-
-  protected void onDestroy()
-  {
-    this.stopService(this.playIntent);
-    this.musicService = null;
-    super.onDestroy();
-  }
-
-  public boolean canPause()
-  {
-    return true;
-  }
-
-  public boolean canSeekBackward()
-  {
-    return true;
-  }
-
-  public boolean canSeekForward()
-  {
-    return true;
-  }
-
-  public int getAudioSessionId()
-  {
-    return 0;
-  }
-
-  public int getBufferPercentage()
-  {
-    return 0;
-  }
-
-  /**
-  *  Get current position of music, notice that is required to make some
-  *  verifications before return this value
-  *  @return Return a integer representing the current position of music
-  */
-  public int getCurrentPosition()
-  {
-    if (this.musicService != null && this.musicBound
-        && this.musicService.isPlaying())
-    {
-      return this.musicService.getPosition();
-    }
-    else
-    {
-      return 0;
-    }
-  }
-
-  /**
-  *  Get music duration
-  */
-  public int getDuration()
-  {
-    if (this.musicService != null && this.musicBound
-        && this.musicService.isPlaying())
-    {
-      return this.musicService.getDuration();
-    }
-    else
-    {
-      return 0;
-    }
-  }
-
-  /**
-  *  Verify if music is playing
-  */
-  public boolean isPlaying()
-  {
-    if (this.musicService != null && this.musicBound)
-    {
-      return this.musicService.isPlaying();
-    }
-    return false;
-  }
-
-  /**
-  *  Pause music
-  */
-  public void pause()
-  {
-    this.playbackPaused = true;
-    this.musicService.pausePlayer();
-  }
-
-  /**
-  *  Get an id and seek this position in music
-  *  @param pPosition integer presenting a position in a music
-  */
-  public void seekTo(int pPosition)
-  {
-    this.musicService.seek(pPosition);
-  }
-
-  /**
-  *  Start playing music
-  */
-  public void start()
-  {
-    this.musicService.go();
   }
 }
