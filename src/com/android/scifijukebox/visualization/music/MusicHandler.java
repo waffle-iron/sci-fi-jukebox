@@ -97,8 +97,16 @@ public class MusicHandler
     for (Song song : this.songList)
     {
       Button btn = new Button(this.base);
-      btn.setText(song.getTitle());
-      this.flipper.addView(btn, new ViewGroup.LayoutParams(
+      View musicInfo = LayoutInflater.from(this.base).inflate(R.layout.music_info, null);
+      TextView title = (TextView)musicInfo.findViewById(R.id.title);
+      TextView artist = (TextView)musicInfo.findViewById(R.id.artist);
+      TextView year = (TextView)musicInfo.findViewById(R.id.year);
+
+      title.setText("Music: " + song.getTitle());
+      artist.setText("Artist: " + song.getArtist());
+      year.setText("Year: Unknown");
+
+      this.flipper.addView(musicInfo, new ViewGroup.LayoutParams(
                                       ViewGroup.LayoutParams.FILL_PARENT,
                                       ViewGroup.LayoutParams.FILL_PARENT));
     }
