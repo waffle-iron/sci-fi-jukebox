@@ -160,16 +160,26 @@ public class SciFiJukebox extends Activity
     Uri uri = Uri.parse(albumTarget.getTitle());
     String path = uri.getPath();
     String idString = path.substring(path.lastIndexOf('/') + 1);
-
     // Get a list of musics related with album
     this.musicHandler.getSongList(idString);
     this.setMusicLayout();
+  }
+
+  public void goHome(View pView)
+  {
+    this.setAlbumLayout();
   }
 
   private void setMusicLayout()
   {
     this.musicLayout = this.musicHandler.updateMusicLayout();
     setContentView(this.musicLayout);
+  }
+
+  private void setAlbumLayout()
+  {
+    this.musicHandler.resetPlayer();
+    setContentView(this.albumLayout);
   }
 
   public void playSong(View pView)
