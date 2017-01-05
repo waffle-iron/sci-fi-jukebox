@@ -82,6 +82,7 @@ public class MusicHandler
   */
   public View updateMusicLayout()
   {
+    this.musicService.resetPlayer();
     LayoutInflater inflater = LayoutInflater.from(this.base);
     this.musicLayout = inflater.inflate(R.layout.player, null);
 
@@ -105,6 +106,13 @@ public class MusicHandler
                                       ViewGroup.LayoutParams.FILL_PARENT));
     }
     return (this.musicLayout);
+  }
+
+  public void resetPlayer()
+  {
+    this.pauseMusic();
+    this.musicService.resetPlayer();
+    this.resetControlAttributes();
   }
 
   /**
@@ -135,7 +143,7 @@ public class MusicHandler
   private void pauseMusic()
   {
     ImageButton pauseButton = (ImageButton)this.musicLayout.findViewById(R.id.play);
-    pauseButton.setImageResource(R.drawable.pause);
+    pauseButton.setImageResource(R.drawable.play);
     this.playbackPaused = false;
     this.playbackPosition = this.getCurrentPosition();
     this.musicService.pausePlayer();
@@ -144,7 +152,7 @@ public class MusicHandler
   private void resumeMusic()
   {
     ImageButton playButton = (ImageButton)this.musicLayout.findViewById(R.id.play);
-    playButton.setImageResource(R.drawable.play);
+    playButton.setImageResource(R.drawable.pause);
 
     this.playbackPaused = true;
     this.musicService.seek(this.playbackPosition);
@@ -246,6 +254,7 @@ public class MusicHandler
   {
     //Retrieve song info
     ContentResolver musicResolver = this.base.getContentResolver();
+    //FIXME: This not work as expected
     String[] filterBy = {"%" + pTargetPath + "%"};
     Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     String data = android.provider.MediaStore.Audio.Media.DATA;
