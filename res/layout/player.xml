@@ -10,7 +10,28 @@
     android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:background="#443837">
+    android:gravity="left"
+    android:padding="10px">
+    <ImageButton
+      android:id="@+id/home"
+      android:layout_width="0dp"
+      android:layout_weight="1"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center_vertical"
+      android:paddingTop="10px"
+      android:paddingBottom="10px"
+      android:background="@null"
+      android:onClick="goHome"
+      android:src="@drawable/home"
+    />
+  </LinearLayout>
+
+  <LinearLayout
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:padding="20px">
     <ImageButton
       android:id="@+id/backward"
       android:layout_width="0dp"
