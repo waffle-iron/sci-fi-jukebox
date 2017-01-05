@@ -88,10 +88,7 @@ public class MusicHandler
 
     this.flipper = (ViewFlipper)this.musicLayout.findViewById(R.id.details);
 
-    flipper.setInAnimation(AnimationUtils.loadAnimation(this.base,
-                                                       R.anim.push_left_in));
-    flipper.setOutAnimation(AnimationUtils.loadAnimation(this.base,
-                                                        R.anim.push_left_out));
+    this.setTransitionDirection(true);
 
     ImageButton backward = (ImageButton)this.musicLayout.findViewById(R.id.backward);
     ImageButton play = (ImageButton)this.musicLayout.findViewById(R.id.play);
@@ -161,6 +158,8 @@ public class MusicHandler
 
   public void goBackward(View pView)
   {
+    this.setTransitionDirection(false);
+
     this.flipper.showPrevious();
     if (this.isPlaying())
     {
@@ -174,6 +173,7 @@ public class MusicHandler
 
   public void goForward(View pView)
   {
+    this.setTransitionDirection(true);
     this.flipper.showNext();
     if (this.isPlaying())
     {
@@ -183,6 +183,17 @@ public class MusicHandler
     {
       this.resetControlAttributes();
     }
+  }
+
+  private void setTransitionDirection(boolean pRightToLeft)
+  {
+    int in = R.anim.push_left_in;
+    int out = R.anim.push_left_out;
+    in = pRightToLeft ? R.anim.push_left_in : R.anim.push_right_in;
+    out = pRightToLeft ? R.anim.push_left_out : R.anim.push_right_out;
+
+    this.flipper.setInAnimation(AnimationUtils.loadAnimation(this.base, in));
+    this.flipper.setOutAnimation(AnimationUtils.loadAnimation(this.base, out));
   }
 
   private void resetControlAttributes()
