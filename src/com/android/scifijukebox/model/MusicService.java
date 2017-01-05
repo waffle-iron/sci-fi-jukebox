@@ -1,7 +1,6 @@
 package com.android.scifijukebox;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -34,9 +33,6 @@ public class MusicService extends Service
 
   private final IBinder musicBind = new MusicBinder();
 
-  private boolean shuffle = false;
-  private Random rand;
-
   private static final String SCIFI_JUKEBOX_SERVICE = "jukebox-service";
 
   // Service methods
@@ -45,7 +41,6 @@ public class MusicService extends Service
   {
     super.onCreate();
     this.songPosition = 0;
-    this.rand = new Random();
     this.player = new MediaPlayer();
     this.initMusicPlayer();
   }
@@ -137,16 +132,9 @@ public class MusicService extends Service
     }
   }
 
-  public void setShuffle()
+  public void resetPlayer()
   {
-    if (this.shuffle)
-    {
-      this.shuffle = false;
-    }
-    else
-    {
-      this.shuffle = true;
-    }
+    this.player.reset();
   }
 
   public void playSong()
@@ -216,22 +204,10 @@ public class MusicService extends Service
 
   public void playNext()
   {
-    if (this.shuffle)
+    this.songPosition++;
+    if (this.songPosition >= this.songList.size())
     {
-      int newSong = this.songPosition;
-      while (newSong == this.songPosition)
-      {
-        newSong = rand.nextInt(this.songList.size());
-      }
-      songPosition = newSong;
-    }
-    else
-    {
-      this.songPosition++;
-      if (this.songPosition >= this.songList.size())
-      {
-        this.songPosition = 0;
-      }
+      this.songPosition = 0;
     }
     playSong();
   }
