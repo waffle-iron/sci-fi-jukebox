@@ -68,7 +68,6 @@ public class SongElementAdapter extends BaseAdapter
     Song currentSong = this.songs.get(pPosition);
 
     wrapper.getTitle().setText(currentSong.getTitle());
-    wrapper.getArtist().setText(currentSong.getArtist());
     wrapper.setPosition(pPosition);
 
     return (row);

@@ -28,15 +28,6 @@ class SongElementWrapper
     return (this.title);
   }
 
-  public TextView getArtist()
-  {
-    if (this.artist == null)
-    {
-      this.artist = (TextView)base.findViewById(R.id.song_artist);
-    }
-    return (this.artist);
-  }
-
   public int getPosition()
   {
     return this.position;
