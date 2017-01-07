@@ -30,6 +30,11 @@ public class SongElementAdapter extends BaseAdapter
     this.inflater = LayoutInflater.from(pContext);
   }
 
+  public void setSongList(ArrayList<Song> pSongs)
+  {
+    this.songs = pSongs;
+  }
+
   @Override
   public int getCount()
   {
@@ -68,7 +73,6 @@ public class SongElementAdapter extends BaseAdapter
     Song currentSong = this.songs.get(pPosition);
 
     wrapper.getTitle().setText(currentSong.getTitle());
-    wrapper.getArtist().setText(currentSong.getArtist());
     wrapper.setPosition(pPosition);
 
     return (row);

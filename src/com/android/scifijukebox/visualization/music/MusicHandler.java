@@ -46,11 +46,16 @@ public class MusicHandler
   private boolean firstTime = true;
   private int playbackPosition = 0;
 
+  private SongElementAdapter adapter;
+
+  private int currentMusic = 0;
+
   private static final String SCIFI_JUKEBOX_PLAYER = "jukebox-player";
 
   public MusicHandler(Context pContext)
   {
     this.base = pContext;
+    this.adapter = new SongElementAdapter(this.base, this.songList);
   }
 
   /**
@@ -110,7 +115,18 @@ public class MusicHandler
                                       ViewGroup.LayoutParams.FILL_PARENT,
                                       ViewGroup.LayoutParams.FILL_PARENT));
     }
+    this.buildMusicList();
     return (this.musicLayout);
+  }
+
+  private ListView buildMusicList()
+  {
+    ListView musicList = (ListView)this.musicLayout.findViewById(
+                                                      R.id.music_list);
+    this.adapter.setSongList(this.songList);
+
+    musicList.setAdapter(adapter);
+    return musicList;
   }
 
   public void resetPlayer()
@@ -121,13 +137,34 @@ public class MusicHandler
   }
 
   /**
+  * Every time that someone uses player menu, this method update music view
+  */
+  public void playFromButton()
+  {
+    this.currentMusic = this.flipper.getDisplayedChild();
+    this.playPauseMusic();
+  }
+
+  /**
+  * Every time that someone try to play music from list
+  */
+  public void playFromList(int pToPlay)
+  {
+    this.currentMusic = (pToPlay < 0) ? 0 : pToPlay;
+    this.resetPlayer();
+    this.setTransitionDirection(true);
+    this.flipper.setDisplayedChild(pToPlay);
+    this.playPauseMusic();
+  }
+
+  /**
   * Handling play and pause music. Basically we can find here the logic to
   * handle play and pause in the same button.
   */
-  public void playPauseMusic()
+  private void playPauseMusic()
   {
-    int displayedChild = this.flipper.getDisplayedChild();
-    this.musicService.setSong(displayedChild);
+    //int displayedChild = this.flipper.getDisplayedChild();
+    this.musicService.setSong(this.currentMusic);
     if (this.playbackPaused)
     {
       this.pauseMusic();
@@ -147,7 +184,8 @@ public class MusicHandler
 
   private void pauseMusic()
   {
-    ImageButton pauseButton = (ImageButton)this.musicLayout.findViewById(R.id.play);
+    ImageButton pauseButton = (ImageButton)this.musicLayout.findViewById(
+                                                                    R.id.play);
     pauseButton.setImageResource(R.drawable.play);
     this.playbackPaused = false;
     this.playbackPosition = this.getCurrentPosition();
@@ -156,7 +194,8 @@ public class MusicHandler
 
   private void resumeMusic()
   {
-    ImageButton playButton = (ImageButton)this.musicLayout.findViewById(R.id.play);
+    ImageButton playButton = (ImageButton)this.musicLayout.findViewById(
+                                                                    R.id.play);
     playButton.setImageResource(R.drawable.pause);
 
     this.playbackPaused = true;
