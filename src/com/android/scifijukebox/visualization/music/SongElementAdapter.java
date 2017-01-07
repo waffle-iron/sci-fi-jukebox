@@ -30,6 +30,11 @@ public class SongElementAdapter extends BaseAdapter
     this.inflater = LayoutInflater.from(pContext);
   }
 
+  public void setSongList(ArrayList<Song> pSongs)
+  {
+    this.songs = pSongs;
+  }
+
   @Override
   public int getCount()
   {
