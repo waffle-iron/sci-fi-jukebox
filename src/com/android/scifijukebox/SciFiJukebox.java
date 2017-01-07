@@ -184,7 +184,13 @@ public class SciFiJukebox extends Activity
 
   public void playSong(View pView)
   {
-    this.musicHandler.playPauseMusic();
+    this.musicHandler.playFromButton();
+  }
+
+  public void songPicked(View pView)
+  {
+    int musicToPlay = ((SongElementWrapper)pView.getTag()).getPosition();
+    this.musicHandler.playFromList(musicToPlay);
   }
 
   public void goBackward(View pView)

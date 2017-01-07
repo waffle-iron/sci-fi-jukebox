@@ -46,6 +46,8 @@ public class MusicHandler
   private boolean firstTime = true;
   private int playbackPosition = 0;
 
+  private int currentMusic = 0;
+
   private static final String SCIFI_JUKEBOX_PLAYER = "jukebox-player";
 
   public MusicHandler(Context pContext)
@@ -110,7 +112,18 @@ public class MusicHandler
                                       ViewGroup.LayoutParams.FILL_PARENT,
                                       ViewGroup.LayoutParams.FILL_PARENT));
     }
+    this.buildMusicList();
     return (this.musicLayout);
+  }
+
+  private ListView buildMusicList()
+  {
+    ListView musicList = (ListView)this.musicLayout.findViewById(
+                                                      R.id.music_list);
+    SongElementAdapter adapter = new SongElementAdapter(this.base,
+                                                        this.songList);
+    musicList.setAdapter(adapter);
+    return musicList;
   }
 
   public void resetPlayer()
@@ -124,10 +137,10 @@ public class MusicHandler
   * Handling play and pause music. Basically we can find here the logic to
   * handle play and pause in the same button.
   */
-  public void playPauseMusic()
+  private void playPauseMusic()
   {
-    int displayedChild = this.flipper.getDisplayedChild();
-    this.musicService.setSong(displayedChild);
+    //int displayedChild = this.flipper.getDisplayedChild();
+    this.musicService.setSong(this.currentMusic);
     if (this.playbackPaused)
     {
       this.pauseMusic();
@@ -143,6 +156,21 @@ public class MusicHandler
       this.firstTime = false;
       this.musicService.playSong();
     }
+  }
+
+  public void playFromButton()
+  {
+    this.currentMusic = this.flipper.getDisplayedChild();
+    this.playPauseMusic();
+  }
+
+  public void playFromList(int pToPlay)
+  {
+    this.currentMusic = pToPlay;
+    this.resetPlayer();
+    this.setTransitionDirection(true);
+    this.flipper.setDisplayedChild(pToPlay);
+    this.playPauseMusic();
   }
 
   private void pauseMusic()
